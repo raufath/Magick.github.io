@@ -1,0 +1,25 @@
+{
+  "guests": [
+    {
+      "id": 1685379333107,
+      "tableNumber": "1",
+      "name": "John Doe",
+      "numberOfPax": 4,
+      "villaNumber": "Villa 101",
+      "remarks": "Vegetarian",
+      "section": "Section 1",
+      "timestamp": "2023-05-29T10:22:13.107Z"
+    },
+    {
+      "id": 1685379350281,
+      "tableNumber": "2",
+      "name": "Jane Smith",
+      "numberOfPax": 2,
+      "villaNumber": "Villa 102",
+      "remarks": "Gluten-free",
+      "section": "Section 2",
+      "timestamp": "2023-05-29T10:22:30.281Z"
+    }
+  ],
+  "notes": "Important notes go here."
+}

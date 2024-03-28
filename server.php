@@ -1,22 +1,28 @@
 <?php
-// Load data from the server-side storage
+// JSON file path
+$jsonFile = 'data.json';
+
+// Load data from the JSON file
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && $_GET['action'] === 'loadGuests') {
-  // Retrieve data from the storage mechanism (e.g., JSON file or database)
-  $data = [
-    'guests' => [], // Retrieve guests data from storage
-    'notes' => '', // Retrieve notes data from storage
-  ];
-  echo json_encode($data);
+  if (file_exists($jsonFile)) {
+    $jsonData = file_get_contents($jsonFile);
+    $data = json_decode($jsonData, true);
+    echo json_encode($data);
+  } else {
+    echo json_encode(['guests' => [], 'notes' => '']);
+  }
 }
 
-// Save data to the server-side storage
+// Save data to the JSON file
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $requestData = json_decode(file_get_contents('php://input'), true);
   if ($requestData['action'] === 'saveGuests') {
-    $guests = $requestData['guests'];
-    $notes = $requestData['notes'];
-    // Save guests and notes data to the storage mechanism (e.g., JSON file or database)
-    // ...
+    $data = [
+      'guests' => $requestData['guests'],
+      'notes' => $requestData['notes']
+    ];
+    file_put_contents($jsonFile, json_encode($data));
+    echo json_encode(['success' => true]);
   }
 }
 ?>

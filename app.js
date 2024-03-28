@@ -114,6 +114,10 @@ const app = Vue.createApp({
       },
       async saveGuests() {
         try {
+          localStorage.setItem('guestData', JSON.stringify({
+            guests: this.guests,
+            notes: this.notes
+          }));
           await fetch('server.php', {
             method: 'POST',
             headers: {
@@ -263,6 +267,12 @@ const app = Vue.createApp({
       }
     },
     mounted() {
+      const storedData = localStorage.getItem('guestData');
+      if (storedData) {
+        const { guests, notes } = JSON.parse(storedData);
+        this.guests = guests;
+        this.notes = notes;
+      }
       this.loadGuests();
     }
   });
