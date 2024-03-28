@@ -1,0 +1,21 @@
+{
+    "name": "Tasting Table Guest Tracker",
+    "short_name": "Guest Tracker",
+    "description": "An application to track guests at a tasting table event.",
+    "icons": [
+      {
+        "src": "images/icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "images/icon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "start_url": "/index.html",
+    "display": "standalone",
+    "theme_color": "#ffffff",
+    "background_color": "#f8f9fa"
+  }

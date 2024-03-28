@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasting Table Guest Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div id="app" class="container">
+        <div class="d-flex justify-content-between my-3">
+            <h1 class="mt-4 mb-4">Tasting Table Guest Tracker</h1>
+            <img src="./images/TT.webp" alt="logo" style="height: 200px; width: 200px;"/>
+        </div>
+        <!-- Notes Section -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card notes-section" :class="{ 'expanded': showNotesModal }">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Notes</h5>
+                            <button class="btn btn-primary" @click="toggleNotesModal">{{ showNotesModal ? 'Hide Notes' : 'View Notes' }}</button>
+                        </div>
+                        <div class="notes-content" v-if="showNotesModal">
+                            <textarea class="form-control" rows="5" v-model="notes" :readonly="!editingNotes" ref="notesTextarea"></textarea>
+                            <div class="notes-buttons">
+                                <button class="btn btn-secondary" @click="editNotes" v-if="!editingNotes">Edit</button>
+                                <button class="btn btn-primary" @click="saveNotes" v-if="editingNotes">Save</button>
+                                <button class="btn btn-primary hide-notes-btn" @click="toggleNotesModal">Hide Notes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Search Guests" v-model="searchTerm">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" v-model="sectionFilter">
+                    <option value="">All Sections</option>
+                    <option value="Section 1">Section 1</option>
+                    <option value="Section 2">Section 2</option>
+                    <option value="Section 3">Section 3</option>
+                </select>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-success me-3" @click="exportToPDF">Export PDF</button>
+                <button class="btn btn-danger" @click="resetAll">Reset All</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Guest List</h5>
+                            <div>
+                                <span class="text-muted">Total Guests: {{ totalGuests }} | Total Rooms: {{ totalRooms }}</span>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th @click="sortColumn = 'tableNumber'; sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">Table Number <i class="fas fa-sort"></i></th>
+                                        <th @click="sortColumn = 'name'; sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">Guest Name <i class="fas fa-sort"></i></th>
+                                        <th @click="sortColumn = 'numberOfPax'; sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">Number of Pax <i class="fas fa-sort"></i></th>
+                                        <th @click="sortColumn = 'villaNumber'; sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">Villa Number <i class="fas fa-sort"></i></th>
+                                        <th>Remarks</th>
+                                        <th @click="sortColumn = 'section'; sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">Section <i class="fas fa-sort"></i></th>
+                                        <th @click="sortColumn = 'timestamp'; sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">Timestamp <i class="fas fa-sort"></i></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(guest, index) in sortedGuests" :key="guest.id">
+                                        <td>
+                                            <span v-if="editing !== index">{{ guest.tableNumber }}</span>
+                                            <input v-else type="text" class="form-control" v-model="guest.tableNumber">
+                                        </td>
+                                        <td>
+                                            <span v-if="editing !== index">{{ guest.name }}</span>
+                                            <input v-else type="text" class="form-control" v-model="guest.name">
+                                        </td>
+                                        <td>
+                                            <span v-if="editing !== index">{{ guest.numberOfPax }}</span>
+                                            <input v-else type="number" class="form-control" v-model="guest.numberOfPax">
+                                        </td>
+                                        <td>
+                                            <span v-if="editing !== index">{{ guest.villaNumber }}</span>
+                                            <input v-else type="text" class="form-control" v-model="guest.villaNumber">
+                                        </td>
+                                        <td>
+                                            <div class="remarks-cell" @click="expandRemarksCell(index)">
+                                                <span class="remarks-text">{{ guest.remarks }}</span>
+                                                <div class="remarks-tooltip" :class="{ 'expanded': expandedRemarksIndex === index }">
+                                                    <textarea v-if="editing === index" class="form-control" v-model="guest.remarks"></textarea>
+                                                    <span v-else>{{ guest.remarks }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span v-if="editing !== index">{{ guest.section }}</span>
+                                            <select v-else class="form-select" v-model="guest.section">
+                                                <option value="">Select Section</option>
+                                                <option value="Section 1">Section 1</option>
+                                                <option value="Section 2">Section 2</option>
+                                                <option value="Section 3">Section 3</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <span v-if="editing !== index">{{ formatTimestamp(guest.timestamp) }}</span>
+                                            <input v-else type="text" class="form-control" v-model="guest.timestamp">
+                                        </td>
+                                        <td class="actions-cell">
+                                            <div class="dropdown">
+                                                <button class="btn btn-link dropdown-toggle" type="button" @click="toggleDropdown(index)">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu" :class="{ 'd-block': openDropdownIndex === index }">
+                                                    <li><a class="dropdown-item" href="#" @click.prevent="editGuest(index)">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#" @click.prevent="saveGuest(index)">Save</a></li>
+                                                    <li><a class="dropdown-item" href="#" @click.prevent="deleteGuest(index)">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="floating-button">
+            <button class="btn btn-primary rounded-circle" @click="openAddGuestModal">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- Add Guest Modal -->
+        <div class="modal fade" :class="{ 'show': showAddGuestModal }" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Guest</h5>
+                        <button type="button" class="btn-close" @click="closeAddGuestModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tableNumber" class="form-label">Table Number</label>
+                                    <input type="text" class="form-control" id="tableNumber" v-model="newGuest.tableNumber" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="guestName" class="form-label">Guest Name</label>
+                                    <input type="text" class="form-control" id="guestName" v-model="newGuest.name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="numberOfPax" class="form-label">Number of Pax</label>
+                                    <input type="number" class="form-control" id="numberOfPax" v-model="newGuest.numberOfPax" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="villaNumber" class="form-label">Villa Number</label>
+                                    <input type="text" class="form-control" id="villaNumber" v-model="newGuest.villaNumber">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="remarks" class="form-label">Remarks</label>
+                                    <input type="text" class="form-control" id="remarks" v-model="newGuest.remarks">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="section" class="form-label">Section</label>
+                                    <select class="form-select" id="section" v-model="newGuest.section">
+                                        <option value="">Select Section</option>
+                                        <option value="Section 1">Section 1</option>
+                                        <option value="Section 2">Section 2</option>
+                                        <option value="Section 3">Section 3</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="closeAddGuestModal">Cancel</button>
+                        <button type="button" class="btn btn-primary" @click="addGuest">Add Guest</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
