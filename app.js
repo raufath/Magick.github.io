@@ -114,11 +114,13 @@ const app = Vue.createApp({
       },
       async saveGuests() {
         try {
-          localStorage.setItem('guestData', JSON.stringify({
+          console.log('Sending data to server:', {
+            action: 'saveGuests',
             guests: this.guests,
-            notes: this.notes
-          }));
-          await fetch('server.php', {
+            notes: this.notes,
+          });
+  
+          const response = await fetch('server.php', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -129,18 +131,30 @@ const app = Vue.createApp({
               notes: this.notes,
             }),
           });
+          const data = await response.json();
+          if (data.success) {
+            console.log('Data saved successfully');
+            localStorage.setItem('guestData', JSON.stringify({
+              guests: this.guests,
+              notes: this.notes
+            }));
+          } else {
+            console.error('Error saving data:', data.error);
+          }
         } catch (error) {
           console.error('Error saving data:', error);
         }
       },
       async loadGuests() {
         try {
-          const response = await fetch('server.php?action=loadGuests');
+          const timestamp = new Date().getTime();
+          const response = await fetch(`server.php?action=loadGuests&t=${timestamp}`);
           const data = await response.json();
-          this.guests = data.guests;
-          this.notes = data.notes;
+          this.guests = data.guests || [];
+          this.notes = data.notes || '';
         } catch (error) {
           console.error('Error loading data:', error);
+          throw error;
         }
       },
       exportToPDF() {
@@ -266,14 +280,19 @@ const app = Vue.createApp({
         console.log(message);
       }
     },
-    mounted() {
-      const storedData = localStorage.getItem('guestData');
-      if (storedData) {
-        const { guests, notes } = JSON.parse(storedData);
-        this.guests = guests;
-        this.notes = notes;
+    async mounted() {
+      try {
+        await this.loadGuests();
+      } catch (error) {
+        console.error('Error loading data from server:', error);
+        const storedData = localStorage.getItem('guestData');
+        if (storedData) {
+          console.log('Loading data from localStorage');
+          const { guests, notes } = JSON.parse(storedData);
+          this.guests = guests;
+          this.notes = notes;
+        }
       }
-      this.loadGuests();
     }
   });
   
