@@ -4,7 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // JSON file path
-$jsonFile = '/Users/magick/Documents/flutter/Archive/data.json';
+$jsonFile = __DIR__ . '/data.json';
 
 // Function to log and return error
 function returnError($message) {
@@ -21,12 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             if ($jsonData === false) {
                 returnError("Failed to read from $jsonFile");
             }
-
             $data = json_decode($jsonData, true);
             if ($data === null) {
                 returnError("Failed to decode JSON data from $jsonFile");
             }
-
             echo json_encode($data);
         } else {
             returnError("File $jsonFile does not exist.");
@@ -40,9 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($requestData === null) {
         returnError("Failed to decode JSON request data");
     }
-
     error_log('Received data: ' . json_encode($requestData));
-    
+
     if (isset($requestData['action']) && $requestData['action'] === 'saveGuests') {
         $data = [
             'guests' => $requestData['guests'],
@@ -52,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($jsonData === false) {
             returnError("Failed to encode JSON data for $jsonFile");
         }
-
         if (file_put_contents($jsonFile, $jsonData) === false) {
             returnError("Failed to save data to $jsonFile");
         } else {

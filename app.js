@@ -1,299 +1,189 @@
 const app = Vue.createApp({
-    data() {
+  data() {
       return {
-        guests: [],
-        newGuest: {
-          id: '',
-          tableNumber: '',
-          name: '',
-          numberOfPax: 0,
-          villaNumber: '',
-          remarks: '',
-          section: '',
-          timestamp: ''
-        },
-        searchTerm: '',
-        sectionFilter: '',
-        sortColumn: '',
-        sortDirection: 'asc',
-        editing: null,
-        openDropdownIndex: null,
-        expandedRemarksIndex: null,
-        showAddGuestModal: false,
-        notes: '',
-        showNotesModal: false,
-        editingNotes: false
+          guests: [],
+          newGuest: {
+              tableNumber: '',
+              name: '',
+              numberOfPax: 0,
+              villaNumber: '',
+              remarks: '',
+              section: '',
+              timestamp: ''
+          },
+          searchTerm: '',
+          sectionFilter: '',
+          notes: '',
+          showNotesModal: false,
+          editingNotes: false,
+          currentDate: new Date().toLocaleDateString()
       };
-    },
-    computed: {
-      filteredGuests() {
-        let result = this.guests;
-        if (this.searchTerm) {
-          const term = this.searchTerm.toLowerCase();
-          result = result.filter(guest =>
-            guest.name.toLowerCase().includes(term) ||
-            guest.tableNumber.toLowerCase().includes(term) ||
-            guest.villaNumber.toLowerCase().includes(term)
-          );
-        }
-        if (this.sectionFilter) {
-          result = result.filter(guest => guest.section === this.sectionFilter);
-        }
-        return result;
-      },
-      sortedGuests() {
-        return this.filteredGuests.sort((a, b) => {
-          const valA = a[this.sortColumn] ? a[this.sortColumn].toString().toLowerCase() : '';
-          const valB = b[this.sortColumn] ? b[this.sortColumn].toString().toLowerCase() : '';
-          if (this.sortDirection === 'asc') {
-            return valA.localeCompare(valB);
+  },
+  computed: {
+      truncatedNotes() {
+          if (this.notes.length > 100) {
+              return this.notes.slice(0, 100) + '...';
           }
-          return valB.localeCompare(valA);
-        });
+          return this.notes;
+      },
+      filteredGuests() {
+          let filtered = this.guests;
+          if (this.searchTerm) {
+              const term = this.searchTerm.toLowerCase();
+              filtered = filtered.filter(guest =>
+                  guest.name.toLowerCase().includes(term) ||
+                  guest.tableNumber.toLowerCase().includes(term) ||
+                  guest.villaNumber.toLowerCase().includes(term)
+              );
+          }
+          if (this.sectionFilter) {
+              filtered = filtered.filter(guest => guest.section === this.sectionFilter);
+          }
+          return filtered;
       },
       totalGuests() {
-        return this.filteredGuests.reduce((total, guest) => total + guest.numberOfPax, 0);
-      },
-      totalRooms() {
-        const roomNumbers = new Set(this.filteredGuests.map(guest => guest.tableNumber));
-        return roomNumbers.size;
+          return this.guests.reduce((total, guest) => total + guest.numberOfPax, 0);
       }
-    },
-    methods: {
-      async addGuest() {
-        if (this.validateGuest(this.newGuest)) {
-          this.newGuest.id = Date.now();
-          this.newGuest.timestamp = new Date().toISOString();
-          this.guests.push({ ...this.newGuest });
-          this.resetNewGuest();
-          await this.saveGuests();
-          this.closeAddGuestModal();
-          this.showSuccessMessage('Guest added successfully.');
-        }
-      },
-      async editGuest(index) {
-        this.editing = index;
-        this.expandedRemarksIndex = index;
-      },
-      async saveGuest(index) {
-        if (this.validateGuest(this.sortedGuests[index])) {
-          this.editing = null;
-          this.openDropdownIndex = null;
-          this.expandedRemarksIndex = null;
-          await this.saveGuests();
-          this.showSuccessMessage('Guest updated successfully.');
-        }
-      },
-      async deleteGuest(index) {
-        if (confirm('Are you sure you want to delete this guest?')) {
-          this.guests.splice(index, 1);
-          this.openDropdownIndex = null;
-          this.expandedRemarksIndex = null;
-          await this.saveGuests();
-          this.showSuccessMessage('Guest deleted successfully.');
-        }
-      },
-      resetNewGuest() {
-        this.newGuest = {
-          id: '',
-          tableNumber: '',
-          name: '',
-          numberOfPax: 0,
-          villaNumber: '',
-          remarks: '',
-          section: '',
-          timestamp: ''
-        };
-      },
-      validateGuest(guest) {
-        return (
-          guest.name.trim() !== '' &&
-          guest.tableNumber.trim() !== '' &&
-          guest.numberOfPax > 0
-        );
-      },
-      async saveGuests() {
-        try {
-          console.log('Sending data to server:', {
-            action: 'saveGuests',
-            guests: this.guests,
-            notes: this.notes,
-          });
-  
-          const response = await fetch('server.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'saveGuests',
-              guests: this.guests,
-              notes: this.notes,
-            }),
-          });
-          const data = await response.json();
-          if (data.success) {
-            console.log('Data saved successfully');
-            localStorage.setItem('guestData', JSON.stringify({
-              guests: this.guests,
-              notes: this.notes
-            }));
-          } else {
-            console.error('Error saving data:', data.error);
-          }
-        } catch (error) {
-          console.error('Error saving data:', error);
-        }
-      },
-      async loadGuests() {
-        try {
-          const timestamp = new Date().getTime();
-          const response = await fetch(`server.php?action=loadGuests&t=${timestamp}`);
-          const data = await response.json();
-          this.guests = data.guests || [];
-          this.notes = data.notes || '';
-        } catch (error) {
-          console.error('Error loading data:', error);
-          throw error;
-        }
-      },
-      exportToPDF() {
-        window.jsPDF = window.jspdf.jsPDF;
-  
-        const doc = new jsPDF();
-  
-        // Add guest list table to the PDF
-        const tableHeaders = ['Table Number', 'Guest Name', 'Number of Pax', 'Villa Number', 'Remarks', 'Section', 'Timestamp'];
-        const tableData = this.guests.map(guest => [
-          guest.tableNumber,
-          guest.name,
-          guest.numberOfPax,
-          guest.villaNumber,
-          guest.remarks,
-          guest.section,
-          this.formatTimestamp(guest.timestamp)
-        ]);
-  
-        let today = new Date();
-        let dateStr = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
-  
-        doc.text('Tasting Table Guest Tracker', doc.internal.pageSize.getWidth() / 2, 10, { align: 'center' });
-        doc.text('Date: ' + dateStr, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-        doc.text('Guest Count: ' + tableData.length, doc.internal.pageSize.getWidth() / 3, 20, { align: 'center' });
-        let imgData = 'data:images/jpeg;base64,...'; // Base64 Data of your logo
-        doc.addImage(imgData, 'JPEG', 160, 10, 40, 40); // Adjust the coordinates and size as needed
-  
-        doc.autoTable({
-          head: [tableHeaders],
-          body: tableData,
-          styles: {
-            fontSize: 7,
-            cellPadding: 1,
-          },
-          headStyles: {
-            fillColor: [41, 128, 185],
-            textColor: 255,
-            fontStyle: 'bold',
-          },
-          columnStyles: {
-            0: { cellWidth: 25 }, // Set width of first column table number
-            1: { cellWidth: 40 }, // Set width of second column guest name
-            2: { cellWidth: 20 }, // Set width of third column
-            3: { cellWidth: 20 }, // Set width of fourth column
-            4: { cellWidth: 50 }, // Set width of fifth column
-            5: { cellWidth: 15 }, // Set width of sixth column
-            6: { cellWidth: 25 }, // Set width of seventh column
-          },
-          margin: { left: 7 }, // Adjust left margin
-        });
-  
-        doc.save('guest_list.pdf');
-      },
+  },
+  methods: {
       formatTimestamp(timestamp) {
-        if (timestamp) {
-          return new Date(timestamp).toLocaleString();
-        }
-        return '';
-      },
-      toggleDropdown(index) {
-        if (this.openDropdownIndex === index) {
-          this.openDropdownIndex = null;
-        } else {
-          this.openDropdownIndex = index;
-        }
-      },
-      expandRemarksCell(index) {
-        if (this.expandedRemarksIndex === index) {
-          this.expandedRemarksIndex = null;
-        } else {
-          this.expandedRemarksIndex = index;
-        }
+          const date = new Date(timestamp);
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          return `${hours}:${minutes}`;
       },
       openAddGuestModal() {
-        this.showAddGuestModal = true;
+          this.resetNewGuest();
+          const modal = new bootstrap.Modal(document.getElementById('addGuestModal'));
+          modal.show();
       },
-      closeAddGuestModal() {
-        this.showAddGuestModal = false;
-        this.resetNewGuest();
+      async addGuest() {
+          if (this.validateGuest()) {
+              const newGuest = {
+                  ...this.newGuest,
+                  id: Date.now(),
+                  timestamp: new Date().toISOString()
+              };
+              this.guests.push(newGuest);
+              await this.saveGuests();
+              const modal = bootstrap.Modal.getInstance(document.getElementById('addGuestModal'));
+              modal.hide();
+              this.resetNewGuest();
+              this.reloadDataTable();
+          }
+      },
+      resetNewGuest() {
+          this.newGuest = {
+              tableNumber: '',
+              name: '',
+              numberOfPax: 0,
+              villaNumber: '',
+              remarks: '',
+              section: '',
+              timestamp: ''
+          };
+      },
+      validateGuest() {
+          return (
+              this.newGuest.tableNumber.trim() !== '' &&
+              this.newGuest.name.trim() !== '' &&
+              this.newGuest.numberOfPax > 0
+          );
+      },
+      async editGuest(index) {
+          const guest = this.guests[index];
+          this.newGuest = { ...guest };
+          const modal = new bootstrap.Modal(document.getElementById('addGuestModal'));
+          modal.show();
+      },
+      async deleteGuest(index) {
+          if (confirm('Are you sure you want to delete this guest?')) {
+              this.guests.splice(index, 1);
+              await this.saveGuests();
+              this.reloadDataTable();
+          }
+      },
+      reloadDataTable() {
+          const table = $('#guestTable').DataTable();
+          table.clear().rows.add(this.filteredGuests).draw();
+      },
+      async saveGuests() {
+          // Save data to data.json using an API call or server-side script
+      },
+      async loadGuests() {
+          try {
+              const response = await fetch('data.json');
+              const data = await response.json();
+              this.guests = data.guests || [];
+              this.notes = data.notes || '';
+          } catch (error) {
+              console.error('Error loading data:', error);
+          }
+      },
+      exportToPDF() {
+          const element = document.getElementById('pdf-content');
+          html2pdf().from(element).save('guest-list.pdf');
       },
       async resetAll() {
-        if (confirm('Are you sure you want to reset all data?')) {
-          this.guests = [];
-          this.notes = '';
-          await this.saveGuests();
-          this.showSuccessMessage('All data has been reset.');
-        }
+          if (confirm('Are you sure you want to reset all data?')) {
+              this.guests = [];
+              this.notes = '';
+              await this.saveGuests();
+              this.reloadDataTable();
+          }
       },
       toggleNotesModal() {
-        this.showNotesModal = !this.showNotesModal;
-        this.editingNotes = false;
-  
-        if (this.showNotesModal) {
-          // Replace asterisk marks with bold spans when showing notes
-          this.notes = this.notes.replace(/\*([^*]*)\*/g, '<span class="bold">$1</span>');
-  
-          // Convert HTML markup to actual elements
-          const notesContainer = document.createElement('div');
-          notesContainer.innerHTML = this.notes;
-          this.notes = notesContainer.textContent;
-        } else {
-          // Remove bold spans when editing notes
-          this.notes = this.notes.replace(/<span class="bold">(.*?)<\/span>/g, '$1');
-        }
-  
-        if (this.showNotesModal) {
-          this.$nextTick(() => {
-            this.$refs.notesTextarea.style.height = 'auto';
-            this.$refs.notesTextarea.style.height = this.$refs.notesTextarea.scrollHeight + 'px';
-          });
-        }
+          this.showNotesModal = !this.showNotesModal;
       },
       editNotes() {
-        this.editingNotes = true;
+          this.editingNotes = true;
       },
       async saveNotes() {
-        await this.saveGuests();
-        this.editingNotes = false;
-      },
-      showSuccessMessage(message) {
-        // Implement your success message functionality here
-        console.log(message);
+          this.editingNotes = false;
+          await this.saveGuests();
       }
-    },
-    async mounted() {
-      try {
-        await this.loadGuests();
-      } catch (error) {
-        console.error('Error loading data from server:', error);
-        const storedData = localStorage.getItem('guestData');
-        if (storedData) {
-          console.log('Loading data from localStorage');
-          const { guests, notes } = JSON.parse(storedData);
-          this.guests = guests;
-          this.notes = notes;
-        }
+  },
+  mounted() {
+      this.loadGuests();
+      $('#guestTable').DataTable({
+          responsive: true,
+          data: this.filteredGuests,
+          columns: [
+              { data: 'tableNumber' },
+              { data: 'name' },
+              { data: 'numberOfPax' },
+              { data: 'villaNumber' },
+              { data: 'remarks' },
+              { data: 'section' },
+              {
+                  data: 'timestamp',
+                  render: (data) => this.formatTimestamp(data)
+              },
+              {
+                  data: null,
+                  orderable: false,
+                  searchable: false,
+                  render: (data, type, row, meta) => {
+                      return `
+                          <div class="d-flex justify-content-center">
+                              <button class="btn btn-primary btn-sm me-2" onclick="app.editGuest(${meta.row})">
+                                  <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-danger btn-sm" onclick="app.deleteGuest(${meta.row})">
+                                  <i class="fas fa-trash"></i>
+                              </button>
+                          </div>
+                      `;
+                  }
+              }
+          ]
+      });
+  },
+  watch: {
+      filteredGuests() {
+          this.reloadDataTable();
       }
-    }
-  });
-  
-  app.mount('#app');
+  }
+});
+
+app.mount('#app');
