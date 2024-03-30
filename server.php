@@ -4,7 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // JSON file path
-$jsonFile = '~/data.json';
+$jsonFile = '/Users/magick/Documents/flutter/Archive/data.json';
 
 // Function to log and return error
 function returnError($message) {
@@ -36,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 // Save data to the JSON file
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    dd('post');
     $requestData = json_decode(file_get_contents('php://input'), true);
     if ($requestData === null) {
         returnError("Failed to decode JSON request data");
