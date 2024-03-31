@@ -132,47 +132,30 @@ const app = Vue.createApp({
       },
       async saveGuests() {
           try {
-              console.log('Sending data to server:', {
-                  action: 'saveGuests',
+              const data = {
                   guests: this.guests,
-                  notes: this.notes,
-              });
-
-              const response = await fetch('server.php', {
-                  method: 'POST',
+                  notes: this.notes
+              };
+              await fetch('data.json', {
+                  method: 'PUT',
                   headers: {
-                      'Content-Type': 'application/json',
+                      'Content-Type': 'application/json'
                   },
-                  body: JSON.stringify({
-                      action: 'saveGuests',
-                      guests: this.guests,
-                      notes: this.notes,
-                  }),
+                  body: JSON.stringify(data)
               });
-              const data = await response.json();
-              if (data.success) {
-                  console.log('Data saved successfully');
-                  localStorage.setItem('guestData', JSON.stringify({
-                      guests: this.guests,
-                      notes: this.notes
-                  }));
-              } else {
-                  console.error('Error saving data:', data.error);
-              }
+              console.log('Data saved successfully');
           } catch (error) {
               console.error('Error saving data:', error);
           }
       },
       async loadGuests() {
           try {
-              const timestamp = new Date().getTime();
-              const response = await fetch(`server.php?action=loadGuests&t=${timestamp}`);
+              const response = await fetch('data.json');
               const data = await response.json();
               this.guests = data.guests || [];
               this.notes = data.notes || '';
           } catch (error) {
               console.error('Error loading data:', error);
-              throw error;
           }
       },
       exportToPDF() {
@@ -181,7 +164,7 @@ const app = Vue.createApp({
           const doc = new jsPDF();
 
           // Add guest list table to the PDF
-          const tableHeaders = ['Table', 'Name', 'Pax', 'Number', 'Remarks', 'Section', 'Time'];
+          const tableHeaders = ['Table Number', 'Guest Name', 'Number of Pax', 'Villa Number', 'Remarks', 'Section', 'Time'];
           const tableData = this.guests.map(guest => [
               guest.tableNumber,
               guest.name,
@@ -214,15 +197,15 @@ const app = Vue.createApp({
                   fontStyle: 'bold',
               },
               columnStyles: {
-                  0: { cellWidth: 10 }, // Set width of first column table number
-                  1: { cellWidth: 60 }, // Set width of second column guest name
-                  2: { cellWidth: 10 }, // Set width of third column
+                  0: { cellWidth: 25 }, // Set width of first column table number
+                  1: { cellWidth: 40 }, // Set width of second column guest name
+                  2: { cellWidth: 20 }, // Set width of third column
                   3: { cellWidth: 20 }, // Set width of fourth column
-                  4: { cellWidth: 60 }, // Set width of fifth column
+                  4: { cellWidth: 50 }, // Set width of fifth column
                   5: { cellWidth: 15 }, // Set width of sixth column
                   6: { cellWidth: 25 }, // Set width of seventh column
               },
-              margin: { left: 3, right: 3 }, // Adjust left margin
+              margin: { left: 7 }, // Adjust left margin
           });
 
           doc.save('guest_list.pdf');
@@ -308,14 +291,7 @@ const app = Vue.createApp({
       try {
           await this.loadGuests();
       } catch (error) {
-          console.error('Error loading data from server:', error);
-          const storedData = localStorage.getItem('guestData');
-          if (storedData) {
-              console.log('Loading data from localStorage');
-              const { guests, notes } = JSON.parse(storedData);
-              this.guests = guests;
-              this.notes = notes;
-          }
+          console.error('Error loading data:', error);
       }
       this.$nextTick(() => {
           $('#guestTable').DataTable({
