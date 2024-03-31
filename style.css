@@ -1,50 +1,48 @@
+/* General Styles */
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Roboto', sans-serif;
     background-color: #f8f9fa;
 }
 
-.logo {
-    max-height: 60px;
+/* Header Styles */
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
 }
 
-.floating-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 9999;
+/* Button Styles */
+.btn-primary {
+    background-color: #38393b;
+    border-color: #d7dbde;
 }
 
-.floating-button i {
-    font-size: 24px;
+.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
 }
 
-.card {
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.btn-success {
+    background-color: #464846;
+    border-color: #f0f7f2;
 }
 
-.card-header {
-    background-color: #007bff;
-    color: #fff;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
 }
 
-.card-header h5 {
-    margin-bottom: 0;
+.btn-danger {
+    background-color: #413e3e;
+    border-color: #f0eced;
 }
 
-.card-body {
-    padding: 20px;
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
 }
 
+/* Form Styles */
 .form-label {
     font-weight: 500;
 }
@@ -56,17 +54,21 @@ body {
 
 .form-control:focus,
 .form-select:focus {
-    border-color: #007bff;
+    border-color: #80bdff;
     box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
 }
 
+/* Table Styles */
 .table {
-    width: 100%;
-    margin-bottom: 0;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    table-layout: fixed;
 }
 
 .table thead th {
-    font-weight: 600;
+    font-weight: 700;
+    text-transform: uppercase;
     background-color: #f8f9fa;
     border-top: none;
 }
@@ -79,69 +81,226 @@ body {
     background-color: #e2e6ea;
 }
 
+.table th,
+.table td {
+    padding: 12px;
+}
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+    width: 7%;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 20%;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+    width: 6%;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+    width: 8%;
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+    width: 25%;
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+    width: 9%;
+}
+
+.table th:nth-child(7),
+.table td:nth-child(7) {
+    width: 7%;
+}
+
+.table th:nth-child(8),
+.table td:nth-child(8) {
+    width: 5%;
+}
+
+/* Remarks Cell Styles */
+.remarks-cell {
+    position: relative;
+    cursor: pointer;
+}
+
+.remarks-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.remarks-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    transition: max-height 0.3s ease;
+}
+
+.remarks-tooltip.expanded {
+    display: block;
+}
+
+.remarks-tooltip textarea {
+    width: 100%;
+    height: 100px;
+    resize: vertical;
+}
+
+/* Actions Cell Styles */
+.actions-cell {
+    white-space: nowrap;
+}
+
+.actions-cell .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Floating Button Styles */
+.floating-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+.floating-button button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    font-size: 24px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal.show {
+    display: block;
+}
+
+.modal-dialog {
+    margin: 1.75rem auto;
+    max-width: 600px;
+}
+
 .modal-header {
-    background-color: #007bff;
-    color: #fff;
-    border-bottom: none;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
 }
 
 .modal-title {
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 500;
 }
 
 .modal-footer {
-    border-top: none;
+    border-top: 1px solid #dee2e6;
 }
 
-.btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
+/* Notes Section Styles */
+.notes-section {
+    max-height: 80px;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.65, 0.05, 0.36, 1);
 }
 
-.btn-primary:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
+.notes-section.expanded {
+    max-height: none;
 }
 
-.btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
+.notes-content {
+    margin-top: 20px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: relative;
 }
 
-.btn-secondary:hover {
-    background-color: #5a6268;
-    border-color: #545b62;
+.notes-section.expanded .notes-content {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-.btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
+.notes-content textarea {
+    resize: vertical;
+    min-height: 150px;
 }
 
-.btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
+.notes-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
 }
 
-.btn-success {
-    background-color: #28a745;
-    border-color: #28a745;
+.hide-notes-btn {
+    position: sticky;
+    bottom: 20px;
+    margin-left: 10px;
 }
 
-.btn-success:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
-}
-
+/* DataTables Styles */
 @media (max-width: 576px) {
-    .floating-button {
-        bottom: 10px;
-        right: 10px;
-        width: 50px;
-        height: 50px;
+    .dataTables_wrapper .dataTables_filter {
+        margin-top: 0.5rem;
     }
 
-    .floating-button i {
-        font-size: 20px;
+    .dataTables_wrapper .dataTables_length {
+        margin-bottom: 0.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_info {
+        margin-top: 0.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 0.5rem;
     }
 }
+/* ... */
+.actions-cell {
+    white-space: nowrap;
+}
+
+.actions-cell .btn {
+    padding: 0;
+    font-size: 1.25rem;
+    color: #6c757d;
+    transition: color 0.3s ease;
+    margin-right: 0.5rem;
+}
+
+.actions-cell .btn:last-child {
+    margin-right: 0;
+}
+
+.actions-cell .btn:hover {
+    color: #212529;
+}
+/* ... */
