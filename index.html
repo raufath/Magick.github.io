@@ -14,6 +14,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script>
+         // Check if the user has entered the correct password
+         const isPasswordValid = localStorage.getItem('passwordValid');
+        if (!isPasswordValid) {
+            window.location.href = 'password.html';
+        } else {
+            // Set a timeout to clear the passwordValid after 8 hours
+            setTimeout(function() {
+                localStorage.removeItem('passwordValid');
+                window.location.href = 'password.html';
+            }, 28800000); // 28800000 milliseconds = 8 hours
+        }
+    </script>
 </head>
 <body>
     <div id="app" class="container">

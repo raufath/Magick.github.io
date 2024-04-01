@@ -94,6 +94,18 @@ const app = Vue.createApp({
               timestamp: ''
           };
       },
+      checkPassword() {
+        const savedPassword = localStorage.getItem('password');
+        if (savedPassword === 'raufath') {
+            this.isPasswordValid = true;
+        } else {
+            this.redirectToPasswordPage();
+        }
+    },
+    
+    redirectToPasswordPage() {
+        window.location.href = 'password.html';
+    },
       async saveEditedGuest() {
           if (this.validateGuest(this.editedGuest)) {
               const index = this.guests.findIndex(guest => guest.id === this.editedGuest.id);
@@ -181,6 +193,26 @@ const app = Vue.createApp({
               throw error;
           }
       },
+      async mounted() {
+        this.checkPassword(); // Check password when the component is mounted
+        
+        if (this.isPasswordValid) {
+            try {
+                await this.loadGuests();
+                this.initializeDataTable();
+            } catch (error) {
+                console.error('Error loading data from server:', error);
+                const storedData = localStorage.getItem('guestData');
+                if (storedData) {
+                    console.log('Loading data from localStorage');
+                    const { guests, notes } = JSON.parse(storedData);
+                    this.guests = guests;
+                    this.notes = notes;
+                    this.initializeDataTable();
+                }
+            }
+        }
+    },
       exportToPDF() {
           window.jsPDF = window.jspdf.jsPDF;
 
