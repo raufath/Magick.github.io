@@ -12,6 +12,15 @@ const app = Vue.createApp({
               section: '',
               timestamp: ''
           },
+          searchTerm: '',
+          sectionFilter: '',
+          sortColumn: '',
+          sortDirection: 'asc',
+          editing: null,
+          openDropdownIndex: null,
+          expandedRemarksIndex: null,
+          showAddGuestModal: false,
+          showEditGuestModal: false,
           editedGuest: {
               id: '',
               tableNumber: '',
@@ -22,16 +31,10 @@ const app = Vue.createApp({
               section: '',
               timestamp: ''
           },
-          searchTerm: '',
-          sectionFilter: '',
-          sortColumn: '',
-          sortDirection: 'asc',
-          expandedRemarksIndex: null,
-          showAddGuestModal: false,
-          showEditGuestModal: false,
           notes: '',
           showNotesModal: false,
-          editingNotes: false
+          editingNotes: false,
+          dataTable: null
       };
   },
   computed: {
@@ -51,14 +54,7 @@ const app = Vue.createApp({
           return result;
       },
       sortedGuests() {
-          return this.filteredGuests.sort((a, b) => {
-              const valA = a[this.sortColumn] ? a[this.sortColumn].toString().toLowerCase() : '';
-              const valB = b[this.sortColumn] ? b[this.sortColumn].toString().toLowerCase() : '';
-              if (this.sortDirection === 'asc') {
-                  return valA.localeCompare(valB);
-              }
-              return valB.localeCompare(valA);
-          });
+          return this.filteredGuests;
       },
       totalGuests() {
           return this.filteredGuests.reduce((total, guest) => total + guest.numberOfPax, 0);
@@ -69,9 +65,6 @@ const app = Vue.createApp({
       }
   },
   methods: {
-      openAddGuestModal() {
-          this.showAddGuestModal = true;
-      },
       async addGuest() {
           if (this.validateGuest(this.newGuest)) {
               this.newGuest.id = Date.now();
@@ -81,34 +74,47 @@ const app = Vue.createApp({
               await this.saveGuests();
               this.closeAddGuestModal();
               this.showSuccessMessage('Guest added successfully.');
+              this.refreshDataTable();
           }
       },
-      openEditGuestModal(index) {
-          this.editedGuest = { ...this.sortedGuests[index] };
+      openEditGuestModal(guest) {
+          this.editedGuest = { ...guest };
           this.showEditGuestModal = true;
+      },
+      closeEditGuestModal() {
+          this.showEditGuestModal = false;
+          this.editedGuest = {
+              id: '',
+              tableNumber: '',
+              name: '',
+              numberOfPax: 0,
+              villaNumber: '',
+              remarks: '',
+              section: '',
+              timestamp: ''
+          };
       },
       async saveEditedGuest() {
           if (this.validateGuest(this.editedGuest)) {
               const index = this.guests.findIndex(guest => guest.id === this.editedGuest.id);
               if (index !== -1) {
-                  this.guests[index] = { ...this.editedGuest };
+                  this.guests.splice(index, 1, { ...this.editedGuest });
                   await this.saveGuests();
                   this.closeEditGuestModal();
                   this.showSuccessMessage('Guest updated successfully.');
+                  this.refreshDataTable();
               }
           }
       },
-      confirmDeleteGuest(guestId) {
+      async deleteGuest(guest) {
           if (confirm('Are you sure you want to delete this guest?')) {
-              this.deleteGuest(guestId);
-          }
-      },
-      async deleteGuest(guestId) {
-          const index = this.guests.findIndex(guest => guest.id === guestId);
-          if (index !== -1) {
-              this.guests.splice(index, 1);
-              await this.saveGuests();
-              this.showSuccessMessage('Guest deleted successfully.');
+              const index = this.guests.findIndex(g => g.id === guest.id);
+              if (index !== -1) {
+                  this.guests.splice(index, 1);
+                  await this.saveGuests();
+                  this.showSuccessMessage('Guest deleted successfully.');
+                  this.refreshDataTable();
+              }
           }
       },
       resetNewGuest() {
@@ -132,30 +138,47 @@ const app = Vue.createApp({
       },
       async saveGuests() {
           try {
-              const data = {
+              console.log('Sending data to server:', {
+                  action: 'saveGuests',
                   guests: this.guests,
-                  notes: this.notes
-              };
-              await fetch('data.json', {
-                  method: 'PUT',
-                  headers: {
-                      'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify(data)
+                  notes: this.notes,
               });
-              console.log('Data saved successfully');
+
+              const response = await fetch('server.php', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                      action: 'saveGuests',
+                      guests: this.guests,
+                      notes: this.notes,
+                  }),
+              });
+              const data = await response.json();
+              if (data.success) {
+                  console.log('Data saved successfully');
+                  localStorage.setItem('guestData', JSON.stringify({
+                      guests: this.guests,
+                      notes: this.notes
+                  }));
+              } else {
+                  console.error('Error saving data:', data.error);
+              }
           } catch (error) {
               console.error('Error saving data:', error);
           }
       },
       async loadGuests() {
           try {
-              const response = await fetch('data.json');
+              const timestamp = new Date().getTime();
+              const response = await fetch(`server.php?action=loadGuests&t=${timestamp}`);
               const data = await response.json();
               this.guests = data.guests || [];
               this.notes = data.notes || '';
           } catch (error) {
               console.error('Error loading data:', error);
+              throw error;
           }
       },
       exportToPDF() {
@@ -164,7 +187,7 @@ const app = Vue.createApp({
           const doc = new jsPDF();
 
           // Add guest list table to the PDF
-          const tableHeaders = ['Table Number', 'Guest Name', 'Number of Pax', 'Villa Number', 'Remarks', 'Section', 'Time'];
+          const tableHeaders = ['Table Number', 'Guest Name', 'Number of Pax', 'Villa Number', 'Remarks', 'Section', 'Timestamp'];
           const tableData = this.guests.map(guest => [
               guest.tableNumber,
               guest.name,
@@ -172,7 +195,7 @@ const app = Vue.createApp({
               guest.villaNumber,
               guest.remarks,
               guest.section,
-              this.formatTime(guest.timestamp)
+              this.formatTimestamp(guest.timestamp)
           ]);
 
           let today = new Date();
@@ -210,7 +233,7 @@ const app = Vue.createApp({
 
           doc.save('guest_list.pdf');
       },
-      formatTime(timestamp) {
+      formatTimestamp(timestamp) {
           if (timestamp) {
               const date = new Date(timestamp);
               const hours = date.getHours().toString().padStart(2, '0');
@@ -219,6 +242,13 @@ const app = Vue.createApp({
           }
           return '';
       },
+      toggleDropdown(index) {
+          if (this.openDropdownIndex === index) {
+              this.openDropdownIndex = null;
+          } else {
+              this.openDropdownIndex = index;
+          }
+      },
       expandRemarksCell(index) {
           if (this.expandedRemarksIndex === index) {
               this.expandedRemarksIndex = null;
@@ -226,22 +256,12 @@ const app = Vue.createApp({
               this.expandedRemarksIndex = index;
           }
       },
+      openAddGuestModal() {
+          this.showAddGuestModal = true;
+      },
       closeAddGuestModal() {
           this.showAddGuestModal = false;
           this.resetNewGuest();
-      },
-      closeEditGuestModal() {
-          this.showEditGuestModal = false;
-          this.editedGuest = {
-              id: '',
-              tableNumber: '',
-              name: '',
-              numberOfPax: 0,
-              villaNumber: '',
-              remarks: '',
-              section: '',
-              timestamp: ''
-          };
       },
       async resetAll() {
           if (confirm('Are you sure you want to reset all data?')) {
@@ -249,6 +269,7 @@ const app = Vue.createApp({
               this.notes = '';
               await this.saveGuests();
               this.showSuccessMessage('All data has been reset.');
+              this.refreshDataTable();
           }
       },
       toggleNotesModal() {
@@ -285,22 +306,75 @@ const app = Vue.createApp({
       showSuccessMessage(message) {
           // Implement your success message functionality here
           console.log(message);
-      }
+      },
+      initializeDataTable() {
+          this.dataTable = $('#guestTable').DataTable({
+              data: this.sortedGuests,
+              columns: [
+                  { data: 'tableNumber' },
+                  { data: 'name' },
+                  { data: 'numberOfPax' },
+                  { data: 'villaNumber' },
+                  { data: 'remarks' },
+                  { data: 'section' },
+                  {
+                      data: 'timestamp',
+                      render: (data) => this.formatTimestamp(data),
+                  },
+                  {
+                      data: null,
+                      orderable: false,
+                      render: (data, type, row, meta) => {
+                          return `
+                              <button class="btn btn-primary btn-sm me-2" data-action="edit" data-index="${meta.row}">
+                                  <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-danger btn-sm" data-action="delete" data-index="${meta.row}">
+                                  <i class="fas fa-trash-alt"></i>
+                              </button>
+                          `;
+                      },
+                  },
+              ],
+              searching: false,
+              drawCallback: () => {
+                  const self = this;
+                  $('#guestTable tbody').on('click', 'button', function () {
+                      const action = $(this).data('action');
+                      const index = $(this).data('index');
+                      const guest = self.sortedGuests[index];
+                      if (action === 'edit') {
+                          self.openEditGuestModal(guest);
+                      } else if (action === 'delete') {
+                          self.deleteGuest(guest);
+                      }
+                  });
+              },
+          });
+      },
+      refreshDataTable() {
+          if (this.dataTable) {
+              this.dataTable.clear();
+              this.dataTable.rows.add(this.sortedGuests);
+              this.dataTable.draw();
+          }
+      },
   },
   async mounted() {
       try {
           await this.loadGuests();
+          this.initializeDataTable();
       } catch (error) {
-          console.error('Error loading data:', error);
+          console.error('Error loading data from server:', error);
+          const storedData = localStorage.getItem('guestData');
+          if (storedData) {
+              console.log('Loading data from localStorage');
+              const { guests, notes } = JSON.parse(storedData);
+              this.guests = guests;
+              this.notes = notes;
+              this.initializeDataTable();
+          }
       }
-      this.$nextTick(() => {
-          $('#guestTable').DataTable({
-              responsive: true,
-              columnDefs: [
-                  { orderable: false, targets: -1 }
-              ]
-          });
-      });
   }
 });
 
