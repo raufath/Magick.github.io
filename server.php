@@ -4,13 +4,28 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // JSON file path
-$jsonFile = '/Users/magick/Documents/flutter/Archive/data.json';
+$jsonFile = __DIR__ . '/data.json';
 
 // Function to log and return error
 function returnError($message) {
     error_log($message);
     echo json_encode(['success' => false, 'error' => $message]);
     exit;
+}
+
+// Check if the JSON file exists
+if (!file_exists($jsonFile)) {
+    // Create the initial JSON data
+    $initialData = [
+        'guests' => [],
+        'notes' => ''
+    ];
+
+    // Save the initial data to the JSON file
+    $jsonData = json_encode($initialData, JSON_PRETTY_PRINT);
+    if (file_put_contents($jsonFile, $jsonData) === false) {
+        returnError("Failed to create $jsonFile");
+    }
 }
 
 // Load data from the JSON file
@@ -42,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     error_log('Received data: ' . json_encode($requestData));
-    
+
     if (isset($requestData['action']) && $requestData['action'] === 'saveGuests') {
         $data = [
             'guests' => $requestData['guests'],
