@@ -4,7 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // JSON file path
-$jsonFile = __DIR__ . '/data.json';
+$jsonFile = '/data.json';
 
 // Function to log and return error
 function returnError($message) {
