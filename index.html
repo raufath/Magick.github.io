@@ -8,73 +8,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script>
-         // Check if the user has entered the correct password
-         const isPasswordValid = localStorage.getItem('passwordValid');
-        if (!isPasswordValid) {
-            window.location.href = 'password.html';
-        } else {
-            // Set a timeout to clear the passwordValid after 8 hours
-            setTimeout(function() {
-                localStorage.removeItem('passwordValid');
-                window.location.href = 'password.html';
-            }, 28800000); // 28800000 milliseconds = 8 hours
-        }
-    </script>
 </head>
 <body>
+    <script>
+        // Check if the user has a valid password before allowing access
+        if (!localStorage.getItem('passwordValid')) {
+            window.location.href = 'password.html';
+        }
+    </script>
+
     <div id="app" class="container">
         <div class="d-flex justify-content-between my-3">
             <h1 class="mt-4 mb-4">Tasting Table Guest Tracker</h1>
             <img src="./images/TT.png" alt="logo" style="height: 100px; width: 200px;"/>
         </div>
         <!-- Notes Section -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card notes-section" :class="{ 'expanded': showNotesModal }">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">Notes</h5>
-                            <button class="btn btn-primary" @click="toggleNotesModal">{{ showNotesModal ? 'Hide Notes' : 'View Notes' }}</button>
-                        </div>
-                        <div class="notes-content" v-if="showNotesModal">
-                            <textarea class="form-control" rows="5" v-model="notes" :readonly="!editingNotes" ref="notesTextarea"></textarea>
-                            <div class="notes-buttons">
-                                <button class="btn btn-secondary" @click="editNotes" v-if="!editingNotes">Edit</button>
-                                <button class="btn btn-primary" @click="saveNotes" v-if="editingNotes">Save</button>
-                                <button class="btn btn-primary hide-notes-btn" @click="toggleNotesModal">Hide Notes</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-3">
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" placeholder="Search Guests" v-model="searchTerm">
+              </div>
             </div>
-        </div>
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" placeholder="Search Guests" v-model="searchTerm">
-                </div>
+            <div class="col-md-3">
+              <select class="form-select" v-model="sectionFilter">
+                <option value="">All Sections</option>
+                <option value="Section 1">Section 1</option>
+                <option value="Section 2">Section 2</option>
+                <option value="Section 3">Section 3</option>
+              </select>
             </div>
-            <div class="col-md-4">
-                <select class="form-select" v-model="sectionFilter">
-                    <option value="">All Sections</option>
-                    <option value="Section 1">Section 1</option>
-                    <option value="Section 2">Section 2</option>
-                    <option value="Section 3">Section 3</option>
-                </select>
+            <div class="col-md-6 text-end">
+              <button class="btn btn-primary me-3" @click="openNotesModal">View Notes</button>
+              <button class="btn btn-success me-3" @click="exportToPDF">Export PDF</button>
+              <button class="btn btn-danger" @click="resetAll">Reset All</button>
             </div>
-            <div class="col-md-4 text-end">
-                <button class="btn btn-success me-3" @click="exportToPDF">Export PDF</button>
-                <button class="btn btn-danger" @click="resetAll">Reset All</button>
-            </div>
-        </div>
+          </div>
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
@@ -86,7 +60,7 @@
                             </div>
                         </div>
                         <div class="table-responsive">
-                            <table id="guestTable" class="table table-striped table-hover">
+                            <table class="table table-striped table-hover">
                                 <thead>
                                     <tr>
                                         <th>Table</th>
@@ -102,16 +76,20 @@
                                 <tbody>
                                     <tr v-for="guest in sortedGuests" :key="guest.id">
                                         <td>{{ guest.tableNumber }}</td>
-                                        <td>{{ guest.name }}</td>
+                                        <td class="guest-name-cell" @click="openGuestNameModal(guest)">
+                                            <div class="cell-content">{{ guest.name }}</div>
+                                        </td>
                                         <td>{{ guest.numberOfPax }}</td>
                                         <td>{{ guest.villaNumber }}</td>
-                                        <td>{{ guest.remarks }}</td>
+                                        <td class="remarks-cell" @click="openRemarksModal(guest)">
+                                            <div class="cell-content">{{ guest.remarks }}</div>
+                                        </td>
                                         <td>{{ guest.section }}</td>
                                         <td>{{ formatTimestamp(guest.timestamp) }}</td>
-                                        <td>
-                                            <button class="btn btn-primary btn-sm me-2" @click="openEditGuestModal(guest)">Edit</button>
-                                            <button class="btn btn-danger btn-sm" @click="deleteGuest(guest)">Delete</button>
-                                          </td>
+                                        <td class="actions-cell">
+                                            <button class="btn btn-link" @click="openEditGuestModal(guest)"><i class="fas fa-edit text-black"></i></button>
+                                            <button class="btn btn-link" @click="deleteGuest(guest)"><i class="fas fa-trash-alt text-black"></i></button>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -144,7 +122,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="guestName" class="form-label">Guest Name</label>
-                                    <input type="text" class="form-control" id="guestName" v-model="newGuest.name" required>
+                                    <textarea class="form-control" id="guestName" v-model="newGuest.name" rows="3" required></textarea>
                                 </div>
                                 <div class="mb-3">
                                     <label for="numberOfPax" class="form-label">Number of Pax</label>
@@ -158,7 +136,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="remarks" class="form-label">Remarks</label>
-                                    <input type="text" class="form-control" id="remarks" v-model="newGuest.remarks">
+                                    <textarea class="form-control" id="remarks" v-model="newGuest.remarks" rows="3"></textarea>
                                 </div>
                                 <div class="mb-3">
                                     <label for="section" class="form-label">Section</label>
@@ -189,35 +167,40 @@
                         <button type="button" class="btn-close" @click="closeEditGuestModal"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- Edit guest form fields -->
-                        <div class="mb-3">
-                            <label for="editTableNumber" class="form-label">Table Number</label>
-                            <input type="text" class="form-control" id="editTableNumber" v-model="editedGuest.tableNumber" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editGuestName" class="form-label">Guest Name</label>
-                            <input type="text" class="form-control" id="editGuestName" v-model="editedGuest.name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editNumberOfPax" class="form-label">Number of Pax</label>
-                            <input type="number" class="form-control" id="editNumberOfPax" v-model="editedGuest.numberOfPax" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editVillaNumber" class="form-label">Villa Number</label>
-                            <input type="text" class="form-control" id="editVillaNumber" v-model="editedGuest.villaNumber">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editRemarks" class="form-label">Remarks</label>
-                            <input type="text" class="form-control" id="editRemarks" v-model="editedGuest.remarks">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editSection" class="form-label">Section</label>
-                            <select class="form-select" id="editSection" v-model="editedGuest.section">
-                                <option value="">Select Section</option>
-                                <option value="Section 1">Section 1</option>
-                                <option value="Section 2">Section 2</option>
-                                <option value="Section 3">Section 3</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editTableNumber" class="form-label">Table Number</label>
+                                    <input type="text" class="form-control" id="editTableNumber" v-model="editedGuest.tableNumber" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editGuestName" class="form-label">Guest Name</label>
+                                    <textarea class="form-control" id="editGuestName" v-model="editedGuest.name" rows="3" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editNumberOfPax" class="form-label">Number of Pax</label>
+                                    <input type="number" class="form-control" id="editNumberOfPax" v-model="editedGuest.numberOfPax" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editVillaNumber" class="form-label">Villa Number</label>
+                                    <input type="text" class="form-control" id="editVillaNumber" v-model="editedGuest.villaNumber">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editRemarks" class="form-label">Remarks</label>
+                                    <textarea class="form-control" id="editRemarks" v-model="editedGuest.remarks" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editSection" class="form-label">Section</label>
+                                    <select class="form-select" id="editSection" v-model="editedGuest.section">
+                                        <option value="">Select Section</option>
+                                        <option value="Section 1">Section 1</option>
+                                        <option value="Section 2">Section 2</option>
+                                        <option value="Section 3">Section 3</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -227,10 +210,60 @@
                 </div>
             </div>
         </div>
+
+        <!-- Guest Name Modal -->
+        <div class="modal" :class="{ 'show': showGuestNameModal }" tabindex="-1" role="dialog" @click.self="closeGuestNameModal">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Guest Name</h5>
+                        <button type="button" class="btn-close" @click="closeGuestNameModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p v-html="formatGuestName(selectedGuest.name)"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Remarks Modal -->
+        <div class="modal" :class="{ 'show': showRemarksModal }" tabindex="-1" role="dialog" @click.self="closeRemarksModal">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Remarks</h5>
+                        <button type="button" class="btn-close" @click="closeRemarksModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p v-html="formatRemarks(selectedGuest.remarks)"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notes Modal -->
+        <div class="modal" :class="{ 'show': showNotesModal }" tabindex="-1" role="dialog" @click.self="closeNotesModal">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Notes</h5>
+                        <button type="button" class="btn-close" @click="closeNotesModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div v-if="!editingNotes" v-html="formatNotes(notes)"></div>
+                        <textarea v-else v-model="notes" class="form-control" rows="5"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @click="editNotes" v-if="!editingNotes">Edit</button>
+                        <button class="btn btn-primary" @click="saveNotes" v-if="editingNotes">Save</button>
+                        <button class="btn btn-danger" @click="closeNotesModal" v-if="editingNotes">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

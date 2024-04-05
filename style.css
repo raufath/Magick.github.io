@@ -1,346 +1,343 @@
 /* General Styles */
 body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #f8f9fa;
-}
-
-/* Header Styles */
-h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #333;
-}
-
-/* Button Styles */
-.btn-primary {
-    background-color: #38393b;
-    border-color: #d7dbde;
-}
-
-.btn-primary:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
-}
-
-.btn-success {
-    background-color: #464846;
-    border-color: #f0f7f2;
-}
-
-.btn-success:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
-}
-
-.btn-danger {
-    background-color: #413e3e;
-    border-color: #f0eced;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
-}
-
-/* Form Styles */
-.form-label {
-    font-weight: 500;
-}
-
-.form-control,
-.form-select {
-    border-radius: 5px;
-}
-
-.form-control:focus,
-.form-select:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
-}
-
-/* Table Styles */
-.table {
-    background-color: #fff;
-    border-radius: 18px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    overflow: hidden; /* Add this line to prevent overflow */
-}
-
-.table thead th {
-    font-weight: 700;
-    text-transform: uppercase;
-    background-color: #f8f9fa;
-    border-top: none;
-    padding: 8px; /* Add padding to table header cells */
-}
-
-.table tbody tr {
-    padding: 3px; /* Add padding to table rows */
-    transition: max-height 0.3s ease-in-out; /* Add transition for smooth animation */
-    overflow: hidden; /* Hide overflow */
-}
-
-.table tbody tr.expanded {
-    max-height: 500px; /* Set a larger max-height for expanded rows */
-}
-
-.table tbody tr:nth-of-type(even) {
-    background-color: #f8f9fa;
-}
-
-.table tbody tr:hover {
-    background-color: #e2e6ea;
-}
-
-.table tbody tr td {
-    padding: 3px; /* Add padding to table data cells */
-    word-wrap: break-word; /* This will allow long words to wrap within the cell */
-    max-width: 300px; /* Set a maximum width for table cells */
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
-/* Guest Name Cell Styles */
-.guest-name-cell {
-    position: relative;
-    cursor: pointer;
-    max-width: 300px; /* Set a maximum width for the guest name cell */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.guest-name-tooltip {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 1;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 10px;
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-    display: none;
-    transition: max-height 0.3s ease;
-}
-
-.guest-name-tooltip.expanded {
-    display: block;
-}
-
-/* Remarks Cell Styles */
-.remarks-cell {
-    position: relative;
-    cursor: pointer;
-    max-width: 200px; /* Set a maximum width for the remarks cell */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.remarks-tooltip {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 1;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 5px;
-    width: 100%;
-    max-height: 100px;
-    overflow-y: auto;
-    display: none;
-    transition: max-height 0.3s ease;
-}
-
-.remarks-tooltip.expanded {
-    display: block;
-}
-
-/* Actions Cell Styles */
-.actions-cell .dropdown-toggle {
-    color: #6c757d;
-}
-
-.actions-cell .dropdown-toggle:hover {
-    color: #212529;
-}
-
-.actions-cell .dropdown-menu {
-    min-width: 100px;
-}
-
-.actions-cell .dropdown-item {
-    padding: 0.25rem 1rem;
-}
-
-/* Floating Button Styles */
-.floating-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-}
-
-.floating-button button {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    font-size: 24px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
-}
-
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-.modal.show {
-    display: block;
-}
-
-.modal-dialog {
-    margin: 1.75rem auto;
-    max-width: 600px;
-}
-
-.modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.modal-title {
-    font-size: 1.25rem;
-    font-weight: 500;
-}
-
-.modal-footer {
-    border-top: 1px solid #dee2e6;
-}
-
-/* Notes Section Styles */
-.notes-section {
-    max-height: 80px;
-    overflow: hidden;
-    transition: max-height 0.5s cubic-bezier(0.65, 0.05, 0.36, 1);
-}
-
-.notes-section.expanded {
-    max-height: none;
-}
-
-.notes-content {
-    margin-top: 20px;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    position: relative;
-}
-
-.notes-section.expanded .notes-content {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.notes-content textarea {
-    resize: vertical;
-    min-height: 150px;
-}
-
-.notes-buttons {
-    margin-top: 10px;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.hide-notes-btn {
-    position: sticky;
-    bottom: 20px;
-    margin-left: 10px;
-}
-
-/* DataTables Styles */
-#guestTable thead th {
-    cursor: pointer;
-}
-
-#guestTable tbody tr {
-    cursor: pointer;
-}
-
-/* Edit and Delete Button Styles */
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-    border-radius: 0.2rem;
-}
-
-.btn-sm i {
-    margin-right: 0.25rem;
-}
-
-.btn-primary.btn-sm {
-    background-color: #007bff;
-    border-color: #007bff;
-}
-
-.btn-primary.btn-sm:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
-}
-
-.btn-danger.btn-sm {
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
-
-.btn-danger.btn-sm:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
-}
-
-/* Responsive Styles */
-@media (max-width: 576px) {
-    .table-responsive {
-        border: none;
-    }
-
-    .table thead {
-        display: none;
-    }
-
-    .table tbody tr {
-        display: block;
-        margin-bottom: 1rem;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-    }
-
-    .table tbody td {
-        display: block;
-        text-align: right;
-        font-size: 0.9rem;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    .table tbody td::before {
-        content: attr(data-label);
-        float: left;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .table tbody td:last-child {
-        border-bottom: none;
-    }
-}
+   font-family: 'Roboto', sans-serif;
+   background-color: #f8f9fa;
+ }
+ 
+ /* Header Styles */
+ h1 {
+   font-size: 2.5rem;
+   font-weight: 700;
+   color: #333;
+ }
+ 
+ /* Button Styles */
+ .btn-primary {
+   background-color: #38393b;
+   border-color: #d7dbde;
+ }
+ 
+ .btn-primary:hover {
+   background-color: #0069d9;
+   border-color: #0062cc;
+ }
+ 
+ .btn-success {
+   background-color: #464846;
+   border-color: #f0f7f2;
+ }
+ 
+ .btn-success:hover {
+   background-color: #218838;
+   border-color: #1e7e34;
+ }
+ 
+ .btn-danger {
+   background-color: #413e3e;
+   border-color: #f0eced;
+ }
+ 
+ .btn-danger:hover {
+   background-color: #c82333;
+   border-color: #bd2130;
+ }
+ 
+ /* Form Styles */
+ .form-label {
+   font-weight: 500;
+ }
+ 
+ .form-control,
+ .form-select {
+   border-radius: 5px;
+ }
+ 
+ .form-control:focus,
+ .form-select:focus {
+   border-color: #80bdff;
+   box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+ }
+ 
+ /* Table Styles */
+ .table {
+   background-color: #fff;
+   border-radius: 18px;
+   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+   overflow: hidden;
+ }
+ 
+ .table thead th {
+   font-weight: 700;
+   text-transform: uppercase;
+   background-color: #f8f9fa;
+   border-top: none;
+   padding: 8px;
+ }
+ 
+ .table tbody tr {
+   padding: 3px;
+   transition: max-height 0.3s ease-in-out;
+   overflow: hidden;
+ }
+ 
+ .table tbody tr.expanded {
+   max-height: 500px;
+ }
+ 
+ .table tbody tr:nth-of-type(even) {
+   background-color: #f8f9fa;
+ }
+ 
+ .table tbody tr:hover {
+   background-color: #e2e6ea;
+ }
+ 
+ .table tbody tr td {
+   padding: 3px;
+   word-wrap: break-word;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+ }
+ 
+ /* Column Width Styles */
+ .table tbody tr td:nth-child(1) {
+   max-width: 80px; /* Table column */
+ }
+ 
+ .table tbody tr td:nth-child(2) {
+   max-width: 250px; /* Name column */
+ }
+ 
+ .table tbody tr td:nth-child(3) {
+   max-width: 60px; /* Pax column */
+ }
+ 
+ .table tbody tr td:nth-child(4) {
+   max-width: 100px; /* Villa Number column */
+ }
+ 
+ .table tbody tr td:nth-child(5) {
+   max-width: 500px; /* Remarks column */
+ }
+ 
+ .table tbody tr td:nth-child(6) {
+   max-width: 80px; /* Section column */
+ }
+ 
+ .table tbody tr td:nth-child(7) {
+   max-width: 80px; /* Time column */
+ }
+ 
+ .table-responsive {
+   overflow-x: auto;
+ }
+ 
+ /* Guest Name Cell Styles */
+ .guest-name-cell,
+ .remarks-cell {
+   position: relative;
+   max-width: 120px;
+   cursor: pointer;
+ }
+ 
+ .guest-name-cell .cell-content,
+ .remarks-cell .cell-content {
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+ }
+ 
+ .guest-name-cell .cell-content.expanded,
+ .remarks-cell .cell-content.expanded {
+   position: absolute;
+   top: 0;
+   left: 0;
+   z-index: 1;
+   background-color: #fff;
+   padding: 5px;
+   min-width: 120px;
+   max-width: 300px;
+   word-wrap: break-word;
+   white-space: normal;
+   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+ }
+ 
+ /* Actions Cell Styles */
+ .actions-cell .dropdown-toggle {
+   color: #6c757d;
+ }
+ 
+ .actions-cell .dropdown-toggle:hover {
+   color: #212529;
+ }
+ 
+ .actions-cell .dropdown-menu {
+   min-width: 100px;
+ }
+ 
+ .actions-cell .dropdown-item {
+   padding: 0.25rem 1rem;
+ }
+ 
+ /* Floating Button Styles */
+ .floating-button {
+   position: fixed;
+   bottom: 20px;
+   right: 20px;
+ }
+ 
+ .floating-button button {
+   width: 60px;
+   height: 60px;
+   border-radius: 50%;
+   font-size: 24px;
+   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+ }
+ 
+ /* Modal Styles */
+ .modal {
+   display: none;
+   position: fixed;
+   z-index: 1000;
+   left: 0;
+   top: 0;
+   width: 100%;
+   height: 100%;
+   overflow: auto;
+   background-color: rgba(0, 0, 0, 0.4);
+ }
+ 
+ .modal.show {
+   display: block;
+ }
+ 
+ .modal-dialog {
+   margin: 1.75rem auto;
+   max-width: 600px;
+ }
+ 
+ .modal-header {
+   background-color: #f8f9fa;
+   border-bottom: 1px solid #dee2e6;
+ }
+ 
+ .modal-title {
+   font-size: 1.25rem;
+   font-weight: 500;
+ }
+ 
+ .modal-footer {
+   border-top: 1px solid #dee2e6;
+ }
+ 
+ /* Notes Section Styles */
+ .notes-section {
+   background-color: #f8f9fa;
+   border-radius: 5px;
+   padding: 15px;
+   margin-bottom: 20px;
+ }
+ 
+ .notes-section .card-title {
+   font-size: 1.25rem;
+   font-weight: 500;
+ }
+ 
+ /* Notes Modal Styles */
+ .modal-body {
+   font-size: 14px;
+   font-family: 'Arial', sans-serif;
+   white-space: pre-wrap;
+   line-height: 1.5;
+ }
+ 
+ /* Edit and Delete Button Styles */
+ .btn-sm {
+   padding: 0.25rem 0.5rem;
+   font-size: 0.875rem;
+   border-radius: 0.2rem;
+ }
+ 
+ .btn-sm i {
+   margin-right: 0.25rem;
+ }
+ 
+ .btn-primary.btn-sm {
+   background-color: #007bff;
+   border-color: #007bff;
+ }
+ 
+ .btn-primary.btn-sm:hover {
+   background-color: #0069d9;
+   border-color: #0062cc;
+ }
+ 
+ .btn-danger.btn-sm {
+   background-color: #dc3545;
+   border-color: #dc3545;
+ }
+ 
+ .btn-danger.btn-sm:hover {
+   background-color: #c82333;
+   border-color: #bd2130;
+ }
+ 
+ /* Guest Name and Remarks Modal Styles */
+ .modal-dialog {
+   margin: 1.75rem auto;
+   max-width: 600px;
+ }
+ 
+ .modal-body {
+   font-size: 14px;
+   font-family: 'Arial', sans-serif;
+   white-space: pre-wrap;
+   line-height: 1.5;
+ }
+ 
+ /* Textarea Styles */
+ textarea.form-control {
+   resize: vertical;
+   min-height: 100px;
+ }
+ 
+ .modal-body textarea.form-control {
+   min-height: 200px;
+ }
+ 
+ /* Responsive Styles */
+ @media (max-width: 576px) {
+   .table-responsive {
+     border: none;
+   }
+ 
+   .table thead {
+     display: none;
+   }
+ 
+   .table tbody tr {
+     display: block;
+     margin-bottom: 1rem;
+     border: 1px solid #dee2e6;
+     border-radius: 5px;
+   }
+ 
+   .table tbody td {
+     display: block;
+     text-align: right;
+     font-size: 0.9rem;
+     border-bottom: 1px solid #dee2e6;
+   }
+ 
+   .table tbody td::before {
+     content: attr(data-label);
+     float: left;
+     font-weight: 700;
+     text-transform: uppercase;
+   }
+ 
+   .table tbody td:last-child {
+     border-bottom: none;
+   }
+ }

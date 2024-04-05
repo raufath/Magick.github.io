@@ -3,10 +3,10 @@
         {
             "id": 1685464377494,
             "tableNumber": "1",
-            "name": "John Doe",
+            "name": "John Doe \nraufath saeed\njana saeed\nJohn Doe \nraufath saeed\njana saeed",
             "numberOfPax": 4,
             "villaNumber": "Villa 101",
-            "remarks": "VegetarianVegetarianVegetarianVegetarianVegetarianVegetarianVegetarianVegetarian",
+            "remarks": "1. PRE-ORDER TILL DEPARTURE \nvilla 301 -Mrs. Maria \n( 13.04.24) \n1xmango \n1xpapaya \n1xblueberries \ud83e\uded0 \n1xMangosteen \n1 bowl of Pomegranate seeds \n1 xSyrniki ( 3 pcs only) \n1xBuckwheat porridge with milk \n1xCarrot mix Apple juice\n",
             "section": "Section 1",
             "timestamp": "2023-05-30T12:06:17.494Z"
         },
@@ -15,7 +15,7 @@
             "tableNumber": "2",
             "name": "Jane Smith",
             "numberOfPax": 2,
-            "villaNumber": "Villa 102",
+            "villaNumber": "Villa 101",
             "remarks": "Gluten-free",
             "section": "Section 2",
             "timestamp": "2023-05-30T12:06:38.731Z"
@@ -91,5 +91,5 @@
             "timestamp": "2024-04-01T20:40:08.637Z"
         }
     ],
-    "notes": "Remember to arrange special meal requests with the kitchen staff."
+    "notes": "*1. PRE-ORDER TILL DEPARTURE*\nvilla 301 -Mrs. Maria\n( 13.04.24)\n1xmango\n1xpapaya\n1xblueberries \ud83e\uded0\n1xMangosteen\n1 bowl of Pomegranate seeds\n1 xSyrniki ( 3 pcs only)\n1xBuckwheat porridge with milk\n1xCarrot mix Apple juice\n\n*2. PRE-ORDER TILL DEPARTURE* (30.03.24)*\nVilla 129 Mr. Evgeny family\n( T 34)\n3 x oatmeal porridge with oat milk , from chef @\u2068~Faruhaan Mohamed\u2069\n\n3. PRE-ORDER TILL DEPARTURE *(29.03.24)\nVilla 309- Mrs. Clarissa\n1x Gluten free soft seeds  bread with sliced avocado, no eggs, olive oil and lemon wedges osd\n\n4.PRE-ORDER TILL DEPARTURE \nVilla 503 (31.03.24)-Mr. Jan Beuck family\n4x gluten free crepes with Nutella on the side"
 }

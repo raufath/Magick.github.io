@@ -34,7 +34,12 @@ const app = Vue.createApp({
       notes: '',
       showNotesModal: false,
       editingNotes: false,
-      dataTable: null
+      showGuestNameModal: false,
+      showRemarksModal: false,
+      selectedGuest: {
+        name: '',
+        remarks: ''
+      }
     };
   },
   computed: {
@@ -65,17 +70,12 @@ const app = Vue.createApp({
     }
   },
   methods: {
-    async addGuest() {
-      if (this.validateGuest(this.newGuest)) {
-        this.newGuest.id = Date.now();
-        this.newGuest.timestamp = new Date().toISOString();
-        this.guests.push({ ...this.newGuest });
-        this.resetNewGuest();
-        await this.saveGuests();
-        this.closeAddGuestModal();
-        this.showSuccessMessage('Guest added successfully.');
-        this.refreshDataTable();
-      }
+    openAddGuestModal() {
+      this.showAddGuestModal = true;
+    },
+    closeAddGuestModal() {
+      this.showAddGuestModal = false;
+      this.resetNewGuest();
     },
     openEditGuestModal(guest) {
       this.editedGuest = { ...guest };
@@ -94,16 +94,16 @@ const app = Vue.createApp({
         timestamp: ''
       };
     },
-    checkPassword() {
-      const savedPassword = localStorage.getItem('password');
-      if (savedPassword === 'raufath') {
-        this.isPasswordValid = true;
-      } else {
-        this.redirectToPasswordPage();
+    async addGuest() {
+      if (this.validateGuest(this.newGuest)) {
+        this.newGuest.id = Date.now();
+        this.newGuest.timestamp = new Date().toISOString();
+        this.guests.push({ ...this.newGuest });
+        this.resetNewGuest();
+        await this.saveGuests();
+        this.closeAddGuestModal();
+        this.showSuccessMessage('Guest added successfully.');
       }
-    },
-    redirectToPasswordPage() {
-      window.location.href = 'password.html';
     },
     async saveEditedGuest() {
       if (this.validateGuest(this.editedGuest)) {
@@ -113,7 +113,6 @@ const app = Vue.createApp({
           await this.saveGuests();
           this.closeEditGuestModal();
           this.showSuccessMessage('Guest updated successfully.');
-          this.refreshDataTable();
         }
       }
     },
@@ -124,7 +123,6 @@ const app = Vue.createApp({
           this.guests.splice(index, 1);
           await this.saveGuests();
           this.showSuccessMessage('Guest deleted successfully.');
-          this.refreshDataTable();
         }
       }
     },
@@ -152,7 +150,7 @@ const app = Vue.createApp({
         console.log('Sending data to server:', {
           action: 'saveGuests',
           guests: this.guests,
-          notes: this.notes,
+          notes: this.notes
         });
 
         const response = await fetch('server.php', {
@@ -163,7 +161,7 @@ const app = Vue.createApp({
           body: JSON.stringify({
             action: 'saveGuests',
             guests: this.guests,
-            notes: this.notes,
+            notes: this.notes
           }),
         });
         const data = await response.json();
@@ -192,79 +190,122 @@ const app = Vue.createApp({
         throw error;
       }
     },
-    async mounted() {
-      this.checkPassword(); // Check password when the component is mounted
-
-      if (this.isPasswordValid) {
-        try {
-          await this.loadGuests();
-          this.initializeDataTable();
-          this.handleRowExpansion();
-        } catch (error) {
-          console.error('Error loading data from server:', error);
-          const storedData = localStorage.getItem('guestData');
-          if (storedData) {
-            console.log('Loading data from localStorage');
-            const { guests, notes } = JSON.parse(storedData);
-            this.guests = guests;
-            this.notes = notes;
-            this.initializeDataTable();
-            this.handleRowExpansion();
-          }
-        }
-      }
-    },
     exportToPDF() {
       window.jsPDF = window.jspdf.jsPDF;
-
+    
       const doc = new jsPDF();
-
-      // Add guest list table to the PDF
-      const tableHeaders = ['Table Number', 'Guest Name', 'Number of Pax', 'Villa Number', 'Remarks', 'Section', 'Timestamp'];
-      const tableData = this.guests.map(guest => [
-        guest.tableNumber,
-        guest.name,
-        guest.numberOfPax,
-        guest.villaNumber,
-        guest.remarks,
-        guest.section,
-        this.formatTimestamp(guest.timestamp)
-      ]);
-
-      let today = new Date();
-      let dateStr = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
-
-      doc.text('Tasting Table Guest Tracker', doc.internal.pageSize.getWidth() / 2, 10, { align: 'center' });
-      doc.text('Date: ' + dateStr, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-      doc.text('Guest Count: ' + tableData.length, doc.internal.pageSize.getWidth() / 3, 20, { align: 'center' });
-      let imgData = 'data:images/jpeg;base64,...'; // Base64 Data of your logo
-      doc.addImage(imgData, 'JPEG', 160, 10, 40, 40); // Adjust the coordinates and size as needed
-
-      doc.autoTable({
-        head: [tableHeaders],
-        body: tableData,
-        styles: {
-          fontSize: 7,
-          cellPadding: 1,
-        },
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          fontStyle: 'bold',
-        },
-        columnStyles: {
-          0: { cellWidth: 25 }, // Set width of first column table number
-          1: { cellWidth: 40 }, // Set width of second column guest name
-          2: { cellWidth: 20 }, // Set width of third column
-          3: { cellWidth: 20 }, // Set width of fourth column
-          4: { cellWidth: 50 }, // Set width of fifth column
-          5: { cellWidth: 15 }, // Set width of sixth column
-          6: { cellWidth: 25 }, // Set width of seventh column
-        },
-        margin: { left: 7 }, // Adjust left margin
-      });
-
-      doc.save('guest_list.pdf');
+    
+      // Load the image
+      let img = new Image();
+      img.src = './images/TT.png';
+    
+      img.onload = function() {
+        // Create a canvas and draw the image on it
+        let canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+    
+        // Get the Data URL of the image
+        let imgData = canvas.toDataURL('image/png');
+    
+        // Function to insert logical line breaks
+        function insertLogicalLineBreaks(str) {
+          // Split the string into lines at each newline, comma, or '@' symbol
+          let lines = str.split(/[\n,@]/);
+    
+          // Join the lines back together, inserting a newline between each one
+          return lines.join('\n');
+        }
+    
+        // Function to format remarks and notes
+        function formatText(text) {
+          // Replace asterisk marks with bold tags
+          text = text.replace(/\*(.*?)\*/g, '$1');
+    
+          // Replace underscore marks with italic tags
+          text = text.replace(/_(.*?)_/g, '<i>$1</i>');
+    
+          // Replace '~' with '@'
+          text = text.replace(/~/g, '@');
+    
+          return text;
+        }
+    
+        // Add guest list table to the PDF
+        const tableHeaders = ['Table', 'Name', 'Pax', 'Villa', 'Remarks', 'Section', 'Time'];
+        const tableData = this.guests.map(guest => [
+          guest.tableNumber,
+          guest.name,
+          guest.numberOfPax,
+          guest.villaNumber,
+          formatText(insertLogicalLineBreaks(guest.remarks)),
+          guest.section,
+          this.formatTimestamp(guest.timestamp)
+        ]);
+    
+        let today = new Date();
+        let day = today.getDate();
+        let month = today.toLocaleString('default', { month: 'long' });
+        let year = today.getFullYear();
+        let dateStr = `${day} ${month} ${year}`;
+        let totalPax = this.totalGuests;
+        let totalRooms = tableData.length;
+    
+        doc.setFont('Merienda', 'normal'); // Use Merienda font for header
+        doc.setFontSize(19);
+        doc.text('Tasting Table Guest Tracker', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
+    
+        // Container for date, total guests, and total pax
+        doc.setFontSize(12);
+        doc.setFont('times', 'normal'); // Use 'times' font, normal style
+        let containerWidth = 197; // Adjust the width as needed
+        let containerX = (doc.internal.pageSize.getWidth() - containerWidth) / 1.80; // Center the container
+        let containerY = 32;
+    
+        doc.setDrawColor(41, 128, 185); // Set the container border color
+        doc.setFillColor(255, 255, 255); // Set the container background color
+        doc.rect(containerX, containerY, containerWidth, 8, 'FD'); // Draw the container
+    
+        doc.text('' + dateStr, containerX + 1, containerY + 5); // Date
+        doc.text('Rooms: ' + totalRooms, containerX + 150, containerY + 5); // Total Rooms
+        doc.text('Guests: ' + totalPax, containerX + 175, containerY + 5); // Total Guests
+    
+        // Add the image to the PDF
+        doc.addImage(imgData, 'PNG', 90, 5, 30, 15); // Adjust the coordinates and size as needed
+    
+        // Add the table to the PDF
+        doc.autoTable({
+          head: [tableHeaders],
+          body: tableData,
+          startY: 39, // Adjust the startY value to position the table below the container
+          styles: {
+            fontSize: 9,
+            cellPadding: 1,
+            overflow: 'linebreak',
+            cellWidth: 'wrap'
+          },
+          headStyles: {
+            fillColor: [41, 128, 185],
+            textColor: 255,
+            fontStyle: 'bold'
+          },
+          columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 50 },
+            2: { cellWidth: 10 },
+            3: { cellWidth: 20 },
+            4: { cellWidth: 80 },
+            5: { cellWidth: 15 },
+            6: { cellWidth: 12 },
+          },
+          pageBreak: 'auto',
+          margin: { top: 10, left: 7.23, right: 5.80, bottom: 40 },
+        });
+    
+        doc.save('guest_list.pdf');
+      }.bind(this);
     },
     formatTimestamp(timestamp) {
       if (timestamp) {
@@ -275,58 +316,40 @@ const app = Vue.createApp({
       }
       return '';
     },
-    toggleDropdown(index) {
-      if (this.openDropdownIndex === index) {
-        this.openDropdownIndex = null;
+    formatGuestName(name) {
+      return name.replace(/\n/g, '<br>');
+    },
+    formatRemarks(remarks) {
+      const lines = remarks.split('\n');
+      const formattedLines = [];
+    
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('*')) {
+          formattedLines.push(`<b>${line.slice(1)}</b>`);
+        } else {
+          formattedLines.push(line);
+        }
+      }
+    
+      return formattedLines.join('<br>');
+    },
+    formatNotes(notes) {
+      let formattedNotes = notes;
+      formattedNotes = formattedNotes.replace(/\*(.*?)\*/g, '<b>$1</b>');
+      formattedNotes = formattedNotes.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      formattedNotes = formattedNotes.replace(/\n/g, '<br>');
+      return formattedNotes;
+    },
+    openNotesModal() {
+      this.showNotesModal = true;
+    },
+    closeNotesModal() {
+      if (!this.editingNotes) {
+        this.showNotesModal = false;
+        this.editingNotes = false;
       } else {
-        this.openDropdownIndex = index;
-      }
-    },
-    expandRemarksCell(index) {
-      if (this.expandedRemarksIndex === index) {
-        this.expandedRemarksIndex = null;
-      } else {
-        this.expandedRemarksIndex = index;
-      }
-    },
-    openAddGuestModal() {
-      this.showAddGuestModal = true;
-    },
-    closeAddGuestModal() {
-      this.showAddGuestModal = false;
-      this.resetNewGuest();
-    },
-    async resetAll() {
-      if (confirm('Are you sure you want to reset all data?')) {
-        this.guests = [];
-        this.notes = '';
-        await this.saveGuests();
-        this.showSuccessMessage('All data has been reset.');
-        this.refreshDataTable();
-      }
-    },
-    toggleNotesModal() {
-      this.showNotesModal = !this.showNotesModal;
-      this.editingNotes = false;
-
-      if (this.showNotesModal) {
-        // Replace asterisk marks with bold spans when showing notes
-        this.notes = this.notes.replace(/\*([^*]*)\*/g, '<span class="bold">$1</span>');
-
-        // Convert HTML markup to actual elements
-        const notesContainer = document.createElement('div');
-        notesContainer.innerHTML = this.notes;
-        this.notes = notesContainer.textContent;
-      } else {
-        // Remove bold spans when editing notes
-        this.notes = this.notes.replace(/<span class="bold">(.*?)<\/span>/g, '$1');
-      }
-
-      if (this.showNotesModal) {
-        this.$nextTick(() => {
-          this.$refs.notesTextarea.style.height = 'auto';
-          this.$refs.notesTextarea.style.height = this.$refs.notesTextarea.scrollHeight + 'px';
-        });
+        this.editingNotes = false;
       }
     },
     editNotes() {
@@ -340,87 +363,37 @@ const app = Vue.createApp({
       // Implement your success message functionality here
       console.log(message);
     },
-    initializeDataTable() {
-      this.dataTable = $('#guestTable').DataTable({
-        data: this.sortedGuests,
-        columns: [
-          { data: 'tableNumber' },
-          { data: 'name' },
-          { data: 'numberOfPax' },
-          { data: 'villaNumber' },
-          { data: 'remarks' },
-          { data: 'section' },
-          {
-            data: 'timestamp',
-            render: (data) => this.formatTimestamp(data),
-          },
-          {
-            data: null,
-            orderable: false,
-            render: (data, type, row, meta) => {
-              return `
-                <button class="btn btn-primary btn-sm me-2" data-action="edit" data-index="${meta.row}">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-danger btn-sm" data-action="delete" data-index="${meta.row}">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-              `;
-            },
-          },
-        ],
-        searching: false,
-        drawCallback: () => {
-          const self = this;
-          $('#guestTable tbody').on('click', 'button', function () {
-            const action = $(this).data('action');
-            const index = $(this).data('index');
-            const guest = self.sortedGuests[index];
-            if (action === 'edit') {
-              self.openEditGuestModal(guest);
-            } else if (action === 'delete') {
-              self.deleteGuest(guest);
-            }
-          });
-        },
-      });
+    openGuestNameModal(guest) {
+      this.selectedGuest.name = guest.name;
+      this.showGuestNameModal = true;
     },
-    refreshDataTable() {
-      if (this.dataTable) {
-        this.dataTable.clear();
-        this.dataTable.rows.add(this.sortedGuests);
-        this.dataTable.draw();
+    closeGuestNameModal() {
+      this.showGuestNameModal = false;
+    },
+    openRemarksModal(guest) {
+      this.selectedGuest.remarks = guest.remarks;
+      this.showRemarksModal = true;
+    },
+    closeRemarksModal() {
+      this.showRemarksModal = false;
+    },
+    async resetAll() {
+      const password = prompt('Enter the password to reset all data:');
+      if (password === 'raufath') {
+        if (confirm('Are you sure you want to reset all data?')) {
+          this.guests = [];
+          this.notes = '';
+          await this.saveGuests();
+          this.showSuccessMessage('All data has been reset.');
+        }
+      } else {
+        alert('Invalid password. Reset operation canceled.');
       }
-    },
-    handleRowExpansion() {
-      // Get all table rows
-      const tableRows = document.querySelectorAll('#guestTable tbody tr');
-
-      // Add click event listener to each row
-      tableRows.forEach(row => {
-        row.addEventListener('click', () => {
-          row.classList.toggle('expanded');
-        });
-      });
-
-      // Check row content height on page load
-      window.addEventListener('load', () => {
-        tableRows.forEach(row => {
-          const rowHeight = row.offsetHeight;
-          const maxHeight = 60; // Match the max-height value in CSS
-
-          if (rowHeight > maxHeight) {
-            row.classList.add('expanded');
-          }
-        });
-      });
-    },
+    }
   },
   async mounted() {
     try {
       await this.loadGuests();
-      this.initializeDataTable();
-      this.handleRowExpansion();
     } catch (error) {
       console.error('Error loading data from server:', error);
       const storedData = localStorage.getItem('guestData');
@@ -429,8 +402,6 @@ const app = Vue.createApp({
         const { guests, notes } = JSON.parse(storedData);
         this.guests = guests;
         this.notes = notes;
-        this.initializeDataTable();
-        this.handleRowExpansion();
       }
     }
   }
